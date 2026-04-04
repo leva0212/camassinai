@@ -67,9 +67,7 @@ import { usePlasmicDataSourceContext } from "@plasmicapp/data-sources-context";
 import { generateDynamicMetadata, PageCtx } from "./PlasmicHomepageServer"; // plasmic-import: ru35t2QF72cm/rscServer
 
 import PageLayout from "../../PageLayout"; // plasmic-import: 8okgrsrq0kYN/component
-import { ProductForm } from "../../ProductForm"; // plasmic-import: CZo6LjgQJsA6/codeComponent
-import { ProductCategoriesManager } from "../../ProductCategoriesManager"; // plasmic-import: FWoO2cD4nbiY/codeComponent
-import { ProductTable } from "../../ProductTable"; // plasmic-import: dO3HJK7QeYww/codeComponent
+import { ProductCategoriesManager } from "@/components/ProductCategoriesManager";
 import { Fetcher } from "@plasmicapp/react-web/lib/data-sources";
 import { _useGlobalVariants } from "./plasmic"; // plasmic-import: n7aNyJLgg5UqcAEDnqHm8X/projectModule
 import { _useStyleTokens } from "./PlasmicStyleTokensProvider"; // plasmic-import: n7aNyJLgg5UqcAEDnqHm8X/styleTokensProvider
@@ -111,9 +109,7 @@ export type PlasmicHomepage__OverridesType = {
   section?: Flex__<"section">;
   h1?: Flex__<"h1">;
   text?: Flex__<"div">;
-  productForm?: Flex__<typeof ProductForm>;
   productCategoriesManager?: Flex__<typeof ProductCategoriesManager>;
-  productTable?: Flex__<typeof ProductTable>;
 };
 
 export interface DefaultHomepageProps {}
@@ -229,12 +225,6 @@ function PlasmicHomepage__RenderFunc(props: {
                       {"Sistema de control de inventario"}
                     </div>
                   </section>
-                  <ProductForm
-                    data-plasmic-name={"productForm"}
-                    data-plasmic-override={overrides.productForm}
-                    className={classNames("__wab_instance", sty.productForm)}
-                  />
-
                   <ProductCategoriesManager
                     data-plasmic-name={"productCategoriesManager"}
                     data-plasmic-override={overrides.productCategoriesManager}
@@ -242,12 +232,6 @@ function PlasmicHomepage__RenderFunc(props: {
                       "__wab_instance",
                       sty.productCategoriesManager
                     )}
-                  />
-
-                  <ProductTable
-                    data-plasmic-name={"productTable"}
-                    data-plasmic-override={overrides.productTable}
-                    className={classNames("__wab_instance", sty.productTable)}
                   />
                 </React.Fragment>
               )}
@@ -266,25 +250,19 @@ const PlasmicDescendants = {
     "section",
     "h1",
     "text",
-    "productForm",
-    "productCategoriesManager",
-    "productTable"
+    "productCategoriesManager"
   ],
   pageLayout: [
     "pageLayout",
     "section",
     "h1",
     "text",
-    "productForm",
-    "productCategoriesManager",
-    "productTable"
+    "productCategoriesManager"
   ],
   section: ["section", "h1", "text"],
   h1: ["h1"],
   text: ["text"],
-  productForm: ["productForm"],
-  productCategoriesManager: ["productCategoriesManager"],
-  productTable: ["productTable"]
+  productCategoriesManager: ["productCategoriesManager"]
 } as const;
 type NodeNameType = keyof typeof PlasmicDescendants;
 type DescendantsType<T extends NodeNameType> =
@@ -295,9 +273,7 @@ type NodeDefaultElementType = {
   section: "section";
   h1: "h1";
   text: "div";
-  productForm: typeof ProductForm;
   productCategoriesManager: typeof ProductCategoriesManager;
-  productTable: typeof ProductTable;
 };
 
 type ReservedPropsType = "variants" | "args" | "overrides";
@@ -391,9 +367,7 @@ export const PlasmicHomepage = Object.assign(
     section: makeNodeComponent("section"),
     h1: makeNodeComponent("h1"),
     text: makeNodeComponent("text"),
-    productForm: makeNodeComponent("productForm"),
     productCategoriesManager: makeNodeComponent("productCategoriesManager"),
-    productTable: makeNodeComponent("productTable"),
 
     // Metadata about props expected for PlasmicHomepage
     internalVariantProps: PlasmicHomepage__VariantProps,

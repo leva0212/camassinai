@@ -41,7 +41,7 @@ export function ProductCategoriesManager() {
 
         setLoading(true);
 
-        if (editingId) {
+        if (editingId !== null) {
 
             await supabase
                 .from("productos_categorias")

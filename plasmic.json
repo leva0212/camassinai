@@ -641,19 +641,19 @@
           "id": "dO3HJK7QeYww",
           "name": "ProductTable",
           "displayName": "ProductTable",
-          "componentImportPath": "./components/ProductTable"
+          "componentImportPath": "./ProductTable"
         },
         {
           "id": "CZo6LjgQJsA6",
           "name": "ProductForm",
           "displayName": "ProductForm",
-          "componentImportPath": "./components/ProductForm"
+          "componentImportPath": "./ProductForm"
         },
         {
           "id": "FWoO2cD4nbiY",
           "name": "ProductCategoriesManager",
           "displayName": "ProductCategoriesManager",
-          "componentImportPath": "./components/ProductCategoriesManager"
+          "componentImportPath": "./ProductCategoriesManager"
         }
       ],
       "customFunctions": []

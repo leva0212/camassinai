@@ -1,71 +1,36 @@
-"use client";
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import PlasmicProvider from "@/components/PlasmicProvider";
 
-import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
-import { ReactNode } from "react";
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
 
-type LayoutProps = {
-  children: ReactNode;
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "Camas Sinai ERP",
+  description: "Sistema de inventario",
 };
 
-export default function Layout({ children }: LayoutProps) {
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/login";
-  };
-
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      {/* Sidebar */}
-      <div
-        style={{
-          width: 240,
-          background: "#1f2937",
-          color: "#fff",
-          display: "flex",
-          flexDirection: "column",
-          padding: "20px 10px",
-        }}
-      >
-        <h2 style={{ textAlign: "center", marginBottom: 20 }}>ERP</h2>
-        <nav style={{ flexGrow: 1 }}>
-          <ul style={{ listStyle: "none", padding: 0 }}>
-            <li style={{ margin: "10px 0" }}>
-              <Link href="/dashboard/productos" style={{ color: "#fff" }}>
-                Productos
-              </Link>
-            </li>
-            <li style={{ margin: "10px 0" }}>
-              <Link href="/dashboard/inventarios" style={{ color: "#fff" }}>
-                Inventarios
-              </Link>
-            </li>
-            <li style={{ margin: "10px 0" }}>
-              <Link href="/dashboard/reportes" style={{ color: "#fff" }}>
-                Reportes
-              </Link>
-            </li>
-          </ul>
-        </nav>
-        <button
-          onClick={handleLogout}
-          style={{
-            background: "#ef4444",
-            border: "none",
-            color: "#fff",
-            padding: "10px",
-            borderRadius: 6,
-            cursor: "pointer",
-          }}
-        >
-          Logout
-        </button>
-      </div>
-
-      {/* Contenido */}
-      <div style={{ flexGrow: 1, padding: 20, background: "#f4f6f8" }}>
-        {children}
-      </div>
-    </div>
+    <html
+      lang="es"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col">
+        <PlasmicProvider>{children}</PlasmicProvider>
+      </body>
+    </html>
   );
 }

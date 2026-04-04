@@ -61,15 +61,7 @@
   max-width: 100%;
   min-width: 0;
 }
-.productForm:global(.__wab_instance) {
-  max-width: 100%;
-  object-fit: cover;
-}
 .productCategoriesManager:global(.__wab_instance) {
-  max-width: 100%;
-  object-fit: cover;
-}
-.productTable:global(.__wab_instance) {
   max-width: 100%;
   object-fit: cover;
 }
