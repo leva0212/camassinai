@@ -2,19 +2,19 @@
 // This file is owned by you, feel free to edit as you see fit.
 import * as React from "react";
 import { PageParamsProvider as PageParamsProvider__ } from "@plasmicapp/host";
-import GlobalContextsProvider from "../components/plasmic/camas_sinai_control/PlasmicGlobalContextsProvider";
+import GlobalContextsProvider from "../../components/plasmic/camas_sinai_control/PlasmicGlobalContextsProvider";
 
 import {
-  PlasmicHomepageServer,
+  PlasmicLoginServer,
   makeAppRouterPageCtx,
   generateDynamicMetadata,
-  HomepageServerSkeletonProps
-} from "../components/plasmic/camas_sinai_control/PlasmicHomepageServer";
+  LoginServerSkeletonProps
+} from "../../components/plasmic/camas_sinai_control/PlasmicLoginServer";
 
 import type { Metadata, ResolvingMetadata } from "next";
 
 export async function generateMetadata(
-  { params, searchParams }: HomepageServerSkeletonProps,
+  { params, searchParams }: LoginServerSkeletonProps,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const ctx = await makeAppRouterPageCtx({ params, searchParams });
@@ -23,20 +23,20 @@ export async function generateMetadata(
   return { ...(await parent), ...metadata } as unknown as Metadata;
 }
 
-async function Homepage({ params, searchParams }: HomepageServerSkeletonProps) {
-  // Use PlasmicHomepage to render this component as it was
+async function Login({ params, searchParams }: LoginServerSkeletonProps) {
+  // Use PlasmicLogin to render this component as it was
   // designed in Plasmic, by activating the appropriate variants,
   // attaching the appropriate event handlers, etc.  You
   // can also install whatever React hooks you need here to manage state or
   // fetch data.
   //
-  // Props you can pass into PlasmicHomepage are:
+  // Props you can pass into PlasmicLogin are:
   // 1. Variants you want to activate,
   // 2. Contents for slots you want to fill,
   // 3. Overrides for any named node in the component to attach behavior and data,
   // 4. Props to set on the root node.
   //
-  // By default, PlasmicHomepage is wrapped by your project's global
+  // By default, PlasmicLogin is wrapped by your project's global
   // variant context providers. These wrappers may be moved to
   // Next.js Custom App component
   // (https://nextjs.org/docs/advanced-features/custom-app).
@@ -44,14 +44,14 @@ async function Homepage({ params, searchParams }: HomepageServerSkeletonProps) {
   return (
     <GlobalContextsProvider>
       <PageParamsProvider__
-        route="/"
+        route="/login"
         params={await params}
         query={await searchParams}
       >
-        <PlasmicHomepageServer />
+        <PlasmicLoginServer />
       </PageParamsProvider__>
     </GlobalContextsProvider>
   );
 }
 
-export default Homepage;
+export default Login;

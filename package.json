@@ -9,11 +9,21 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.1.1",
+    "@ant-design/pro-components": "^2.6.4",
+    "@plasmicapp/host": "^2.0.0",
+    "@plasmicapp/react-web": "^1.0.0",
+    "@plasmicpkgs/antd5": "^0.0.337",
+    "@plasmicpkgs/plasmic-basic-components": "^0.0.272",
+    "@plasmicpkgs/plasmic-query": "^0.0.262",
+    "@plasmicpkgs/plasmic-rich-components": "^1.0.243",
+    "@supabase/supabase-js": "^2.101.1",
     "next": "16.2.2",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@plasmicapp/cli": "^0.1.359",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
