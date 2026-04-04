@@ -2,7 +2,7 @@
 
 import { registerComponent } from "@plasmicapp/host";
 
-import ProductTable from "./ProductTable";
+import {ProductTable} from "./ProductTable";
 import { ProductForm } from "./ProductForm";
 import { ProductCategoriesManager } from "./ProductCategoriesManager";
 

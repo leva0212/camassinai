@@ -1,4 +1,4 @@
-import ProductTable from "@/components/ProductTable";
+import {ProductTable} from "@/components/ProductTable";
 import {ProductForm} from "@/components/ProductForm";
 
 export default function ProductosPage(){

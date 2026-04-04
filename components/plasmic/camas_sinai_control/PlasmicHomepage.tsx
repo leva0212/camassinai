@@ -69,6 +69,7 @@ import { generateDynamicMetadata, PageCtx } from "./PlasmicHomepageServer"; // p
 import PageLayout from "../../PageLayout"; // plasmic-import: 8okgrsrq0kYN/component
 import { ProductForm } from "../../ProductForm"; // plasmic-import: CZo6LjgQJsA6/codeComponent
 import { ProductCategoriesManager } from "../../ProductCategoriesManager"; // plasmic-import: FWoO2cD4nbiY/codeComponent
+import { ProductTable } from "../../ProductTable"; // plasmic-import: dO3HJK7QeYww/codeComponent
 import { Fetcher } from "@plasmicapp/react-web/lib/data-sources";
 import { _useGlobalVariants } from "./plasmic"; // plasmic-import: n7aNyJLgg5UqcAEDnqHm8X/projectModule
 import { _useStyleTokens } from "./PlasmicStyleTokensProvider"; // plasmic-import: n7aNyJLgg5UqcAEDnqHm8X/styleTokensProvider
@@ -112,6 +113,7 @@ export type PlasmicHomepage__OverridesType = {
   text?: Flex__<"div">;
   productForm?: Flex__<typeof ProductForm>;
   productCategoriesManager?: Flex__<typeof ProductCategoriesManager>;
+  productTable?: Flex__<typeof ProductTable>;
 };
 
 export interface DefaultHomepageProps {}
@@ -241,6 +243,12 @@ function PlasmicHomepage__RenderFunc(props: {
                       sty.productCategoriesManager
                     )}
                   />
+
+                  <ProductTable
+                    data-plasmic-name={"productTable"}
+                    data-plasmic-override={overrides.productTable}
+                    className={classNames("__wab_instance", sty.productTable)}
+                  />
                 </React.Fragment>
               )}
             </DataCtxReader__>
@@ -259,7 +267,8 @@ const PlasmicDescendants = {
     "h1",
     "text",
     "productForm",
-    "productCategoriesManager"
+    "productCategoriesManager",
+    "productTable"
   ],
   pageLayout: [
     "pageLayout",
@@ -267,13 +276,15 @@ const PlasmicDescendants = {
     "h1",
     "text",
     "productForm",
-    "productCategoriesManager"
+    "productCategoriesManager",
+    "productTable"
   ],
   section: ["section", "h1", "text"],
   h1: ["h1"],
   text: ["text"],
   productForm: ["productForm"],
-  productCategoriesManager: ["productCategoriesManager"]
+  productCategoriesManager: ["productCategoriesManager"],
+  productTable: ["productTable"]
 } as const;
 type NodeNameType = keyof typeof PlasmicDescendants;
 type DescendantsType<T extends NodeNameType> =
@@ -286,6 +297,7 @@ type NodeDefaultElementType = {
   text: "div";
   productForm: typeof ProductForm;
   productCategoriesManager: typeof ProductCategoriesManager;
+  productTable: typeof ProductTable;
 };
 
 type ReservedPropsType = "variants" | "args" | "overrides";
@@ -381,6 +393,7 @@ export const PlasmicHomepage = Object.assign(
     text: makeNodeComponent("text"),
     productForm: makeNodeComponent("productForm"),
     productCategoriesManager: makeNodeComponent("productCategoriesManager"),
+    productTable: makeNodeComponent("productTable"),
 
     // Metadata about props expected for PlasmicHomepage
     internalVariantProps: PlasmicHomepage__VariantProps,
