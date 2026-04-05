@@ -1,149 +1,130 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-type Producto = {
-  id: number;
-  nombre: string;
-  precio: number;
-};
-
 type Props = {
-  producto: Producto;
+  producto: any;
   onSaved: () => void;
+  onClose: () => void;
 };
 
-export default function ProductEditModal({ producto, onSaved }: Props) {
-
-  const [nombre, setNombre] = useState<string>(producto?.nombre || "");
-  const [precio, setPrecio] = useState<string>(
-    producto?.precio ? String(producto.precio) : ""
-  );
-
+export default function ProductEditModal({
+  producto,
+  onSaved,
+  onClose
+}: Props) {
+  const [nombre, setNombre] = useState(producto.prod_nombre);
+  const [precio, setPrecio] = useState(producto.prod_precio || "");
   const [loading, setLoading] = useState(false);
 
   const guardar = async () => {
-
-    // VALIDACIONES
-
-    if (!nombre.trim()) {
-      alert("El nombre del producto es obligatorio");
-      return;
-    }
-
-    if (!precio.trim()) {
-      alert("El precio es obligatorio");
-      return;
-    }
-
-    const precioNumero = Number(precio);
-
-    if (isNaN(precioNumero) || precioNumero < 0) {
-      alert("El precio debe ser un número válido");
-      return;
-    }
-
     setLoading(true);
 
     const { error } = await supabase
       .from("productos")
       .update({
-        nombre: nombre.trim(),
-        precio: precioNumero
+        prod_nombre: nombre,
+        prod_precio: precio ? Number(precio) : null
       })
-      .eq("id", producto.id);
+      .eq("prod_id", producto.prod_id);
 
     setLoading(false);
 
     if (error) {
-      alert("Error al actualizar: " + error.message);
+      alert(error.message);
       return;
     }
 
-    alert("Producto actualizado correctamente");
+    onSaved();
+    onClose();
+  };
+
+  const eliminar = async () => {
+    if (!confirm("¿Eliminar producto?")) return;
+
+    const { error } = await supabase
+      .from("productos")
+      .update({ prod_activo: false })
+      .eq("prod_id", producto.prod_id);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
     onSaved();
+    onClose();
   };
 
   return (
+    <div>
 
-    <div
-      style={{
-        background: "#fff",
-        padding: 20,
-        borderRadius: 10,
-        width: 400,
-        maxWidth: "100%"
-      }}
-    >
-
-      <h3 style={{ marginBottom: 20 }}>
-        Editar Producto
-      </h3>
-
-      {/* NOMBRE */}
-
-      <div style={{ marginBottom: 15 }}>
-
-        <label style={{ display: "block", marginBottom: 5 }}>
-          Nombre
-        </label>
-
+      <div style={{ marginBottom: 12 }}>
         <input
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 10,
-            borderRadius: 6,
-            border: "1px solid #ddd"
-          }}
+          placeholder="Nombre"
+          style={input}
         />
-
       </div>
-
-      {/* PRECIO */}
 
       <div style={{ marginBottom: 20 }}>
-
-        <label style={{ display: "block", marginBottom: 5 }}>
-          Precio
-        </label>
-
         <input
-          type="number"
           value={precio}
           onChange={(e) => setPrecio(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 10,
-            borderRadius: 6,
-            border: "1px solid #ddd"
-          }}
+          placeholder="Precio"
+          type="number"
+          style={input}
         />
-
       </div>
 
-      {/* BOTÓN */}
-
-      <button
-        onClick={guardar}
-        disabled={loading}
-        style={{
-          width: "100%",
-          padding: 12,
-          background: "#4f46e5",
-          color: "#fff",
-          border: "none",
-          borderRadius: 6,
-          cursor: loading ? "not-allowed" : "pointer"
-        }}
-      >
-        {loading ? "Guardando..." : "Guardar Cambios"}
+      <button onClick={guardar} style={btnPrimary} disabled={loading}>
+        Guardar
       </button>
 
-    </div>
+      <button onClick={eliminar} style={btnDanger}>
+        Desactivar producto
+      </button>
 
+      <button onClick={onClose} style={btnSecondary}>
+        Cancelar
+      </button>
+    </div>
   );
 }
+
+const input = {
+  width: "100%",
+  padding: 10,
+  borderRadius: 6,
+  border: "1px solid #ddd"
+};
+
+const btnPrimary = {
+  width: "100%",
+  padding: 10,
+  background: "#4f46e5",
+  color: "#fff",
+  border: "none",
+  borderRadius: 6,
+  marginBottom: 8
+};
+
+const btnDanger = {
+  width: "100%",
+  padding: 10,
+  background: "#ef4444",
+  color: "#fff",
+  border: "none",
+  borderRadius: 6,
+  marginBottom: 8
+};
+
+const btnSecondary = {
+  width: "100%",
+  padding: 10,
+  background: "#e5e7eb",
+  border: "none",
+  borderRadius: 6
+};

@@ -3,8 +3,21 @@
 import { registerComponent } from "@plasmicapp/host";
 
 import { ProductTable } from "./ProductTable";
-import { ProductForm } from "./ProductForm";
+//import { ProductFormModal } from "./ProductFormModal";
 import { ProductCategoriesManager } from "./ProductCategoriesManager";
+import { ProductForm } from "./ProductForm";
+import { CrudTable } from "./CrudTable";
+
+registerComponent(CrudTable, {
+  name: "CrudTable",
+  importPath: "./CrudTable",
+  props: {
+    table: "string",
+    idField: "string",
+    columns: "string" // Plasmic no entiende tipos complejos, puedes usar JSON.stringify / JSON.parse
+  },
+});
+
 
 registerComponent(ProductCategoriesManager, {
   name: "ProductCategoriesManager",

@@ -19,9 +19,10 @@ type Producto = {
 type Props = {
   producto?: Producto;
   onSaved?: () => void;
+  onClose?: () => void;
 };
 
-export function ProductForm({ producto, onSaved }: Props) {
+export function ProductFormModal({ producto, onSaved, onClose }: Props) {
 
   const editando = !!producto;
 
@@ -149,119 +150,135 @@ export function ProductForm({ producto, onSaved }: Props) {
 
     setLoading(false);
     onSaved?.();
+    onClose?.();
 
   };
 
   return (
 
-    <div
-      style={{
-        background: "#fff",
-        padding: 20,
-        borderRadius: 10,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-        marginBottom: 20
-      }}
-    >
+    <div style={overlay}>
 
-      <h3 style={{ marginBottom: 20 }}>
-        {editando ? "Editar producto" : "Crear producto"}
-      </h3>
+      <div style={modal}>
 
-      <div
-  style={{
-    display: "flex",
-    flexDirection: "column",
-    gap: 16,
-    maxWidth: 300,
-    margin: "0 auto",
-    width: "100%"
-  }}
->
+        <h3 style={{ marginBottom: 20 }}>
+          {editando ? "Editar producto" : "Crear producto"}
+        </h3>
 
-        {/* NOMBRE */}
-
-        <div style={{ display: "flex", flexDirection: "column" }}>
-
-          <label style={label}>Nombre producto</label>
-
-          <input
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            style={input}
-          />
-
-        </div>
-
-        {/* PRECIO */}
-
-        <div style={{ display: "flex", flexDirection: "column" }}>
-
-          <label style={label}>Precio</label>
-
-          <input
-            value={precio}
-            onChange={(e) => setPrecio(e.target.value)}
-            style={input}
-          />
-
-        </div>
-
-        {/* CATEGORIA */}
-
-        <div style={{ display: "flex", flexDirection: "column" }}>
-
-          <label style={label}>Categoría</label>
-
-          <select
-            value={categoria ?? ""}
-            onChange={(e) =>
-              setCategoria(Number(e.target.value))
-            }
-            style={input}
-          >
-
-            {categorias.map((c) => (
-
-              <option
-                key={c.prod_cat_id}
-                value={c.prod_cat_id}
-              >
-                {c.prod_cat_nombre}
-              </option>
-
-            ))}
-
-          </select>
-
-        </div>
-
-        {/* BOTON GUARDAR */}
-
-        <button
-          onClick={guardar}
-          disabled={loading}
-          style={botonPrincipal}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+            maxWidth: 300,
+            margin: "0 auto",
+            width: "100%"
+          }}
         >
-          {loading
-            ? "Guardando..."
-            : editando
-            ? "Actualizar"
-            : "Crear"}
-        </button>
 
-        {/* ACTIVAR DESACTIVAR */}
+          {/* NOMBRE */}
 
-        {editando && (
+          <div style={{ display: "flex", flexDirection: "column" }}>
 
-          <button
-            onClick={() => setActivo(!activo)}
-            style={botonSecundario}
-          >
-            {activo ? "Desactivar" : "Activar"}
-          </button>
+            <label style={label}>Nombre producto</label>
 
-        )}
+            <input
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              style={input}
+            />
+
+          </div>
+
+          {/* PRECIO */}
+
+          <div style={{ display: "flex", flexDirection: "column" }}>
+
+            <label style={label}>Precio</label>
+
+            <input
+              value={precio}
+             onChange={(e) => {
+    const v = e.target.value.replace(/[^0-9]/g, "");
+    setPrecio(v);
+  }}
+              style={input}
+            />
+
+          </div>
+
+          {/* CATEGORIA */}
+
+          <div style={{ display: "flex", flexDirection: "column" }}>
+
+            <label style={label}>Categoría</label>
+
+            <select
+              value={categoria ?? ""}
+              onChange={(e) =>
+                setCategoria(Number(e.target.value))
+              }
+              style={input}
+            >
+
+              {categorias.map((c) => (
+
+                <option
+                  key={c.prod_cat_id}
+                  value={c.prod_cat_id}
+                >
+                  {c.prod_cat_nombre}
+                </option>
+
+              ))}
+
+            </select>
+
+          </div>
+
+          {/* ACTIVO SOLO EN EDICION */}
+
+          {editando && (
+
+            <label style={{ display: "flex", gap: 6 }}>
+
+              <input
+                type="checkbox"
+                checked={activo}
+                onChange={(e) => setActivo(e.target.checked)}
+              />
+
+              Producto activo
+
+            </label>
+
+          )}
+
+          {/* BOTONES */}
+
+          <div style={{ display: "flex", gap: 10 }}>
+
+            <button
+              onClick={guardar}
+              disabled={loading}
+              style={botonPrincipal}
+            >
+              {loading
+                ? "Guardando..."
+                : editando
+                ? "Actualizar"
+                : "Crear"}
+            </button>
+
+            <button
+              onClick={onClose}
+              style={botonSecundario}
+            >
+              Cancelar
+            </button>
+
+          </div>
+
+        </div>
 
       </div>
 
@@ -270,6 +287,27 @@ export function ProductForm({ producto, onSaved }: Props) {
   );
 
 }
+
+const overlay = {
+  position: "fixed" as const,
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  background: "rgba(0,0,0,0.4)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 1000
+};
+
+const modal = {
+  background: "#fff",
+  padding: 25,
+  borderRadius: 10,
+  width: 380,
+  boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
+};
 
 const label = {
   fontSize: 13,

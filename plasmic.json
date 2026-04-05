@@ -592,6 +592,24 @@
             "serverModulePath": "plasmic/camas_sinai_control/PlasmicLoginServer.tsx",
             "clientModulePath": "../app/login/page-client.tsx"
           }
+        },
+        {
+          "id": "j-WUM6FzFAEB",
+          "name": "PruebaTable",
+          "type": "managed",
+          "projectId": "n7aNyJLgg5UqcAEDnqHm8X",
+          "renderModuleFilePath": "plasmic/camas_sinai_control/PlasmicPruebaTable.tsx",
+          "importSpec": {
+            "modulePath": "../app/prueba-table/page.tsx"
+          },
+          "cssFilePath": "plasmic/camas_sinai_control/PlasmicPruebaTable.module.css",
+          "scheme": "blackbox",
+          "componentType": "page",
+          "path": "/prueba-table",
+          "rsc": {
+            "serverModulePath": "plasmic/camas_sinai_control/PlasmicPruebaTableServer.tsx",
+            "clientModulePath": "../app/prueba-table/page-client.tsx"
+          }
         }
       ],
       "icons": [
@@ -654,6 +672,12 @@
           "name": "ProductCategoriesManager",
           "displayName": "ProductCategoriesManager",
           "componentImportPath": "./ProductCategoriesManager"
+        },
+        {
+          "id": "3qxoeeRVqtDV",
+          "name": "CrudTable",
+          "displayName": "CrudTable",
+          "componentImportPath": "./CrudTable"
         }
       ],
       "customFunctions": []
