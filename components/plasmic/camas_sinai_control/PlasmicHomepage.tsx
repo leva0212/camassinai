@@ -66,8 +66,7 @@ import { usePlasmicDataSourceContext } from "@plasmicapp/data-sources-context";
 
 import { generateDynamicMetadata, PageCtx } from "./PlasmicHomepageServer"; // plasmic-import: ru35t2QF72cm/rscServer
 
-import { CrudTable } from "../../CrudTable"; // plasmic-import: 3qxoeeRVqtDV/codeComponent
-import { AntdButton } from "@plasmicpkgs/antd5/skinny/registerButton";
+import { ProductTable } from "../../ProductTable"; // plasmic-import: dO3HJK7QeYww/codeComponent
 import { Fetcher } from "@plasmicapp/react-web/lib/data-sources";
 import { _useGlobalVariants } from "./plasmic"; // plasmic-import: n7aNyJLgg5UqcAEDnqHm8X/projectModule
 import { _useStyleTokens } from "./PlasmicStyleTokensProvider"; // plasmic-import: n7aNyJLgg5UqcAEDnqHm8X/styleTokensProvider
@@ -105,9 +104,8 @@ export const PlasmicHomepage__ArgProps = new Array<ArgPropType>();
 
 export type PlasmicHomepage__OverridesType = {
   root?: Flex__<"div">;
-  crudTable?: Flex__<typeof CrudTable>;
-  button?: Flex__<typeof AntdButton>;
-  text?: Flex__<"div">;
+  freeBox?: Flex__<"div">;
+  pagProds?: Flex__<typeof ProductTable>;
 };
 
 export interface DefaultHomepageProps {}
@@ -185,42 +183,17 @@ function PlasmicHomepage__RenderFunc(props: {
             sty.root
           )}
         >
-          <CrudTable
-            data-plasmic-name={"crudTable"}
-            data-plasmic-override={overrides.crudTable}
-            className={classNames("__wab_instance", sty.crudTable)}
-            columns={[
-              { field: "prod_nombre", label: "Nombre", type: "text" },
-              { field: "prod_cat_id", label: "Categor\u00eda", type: "number" },
-              { field: "prod_precio", label: "Precio", type: "number" },
-              { field: "prod_activo", label: "Activo", type: "boolean" },
-              {
-                field: "prod_fechaCreacion",
-                label: "Fecha Creaci\u00f3n",
-                type: "text"
-              }
-            ]}
-            idField={"prod_id"}
-            table={"productos"}
-          />
-
-          <AntdButton
-            data-plasmic-name={"button"}
-            data-plasmic-override={overrides.button}
-            className={classNames("__wab_instance", sty.button)}
+          <div
+            data-plasmic-name={"freeBox"}
+            data-plasmic-override={overrides.freeBox}
+            className={classNames(projectcss.all, sty.freeBox)}
           >
-            <div
-              data-plasmic-name={"text"}
-              data-plasmic-override={overrides.text}
-              className={classNames(
-                projectcss.all,
-                projectcss.__wab_text,
-                sty.text
-              )}
-            >
-              {"Aceptar"}
-            </div>
-          </AntdButton>
+            <ProductTable
+              data-plasmic-name={"pagProds"}
+              data-plasmic-override={overrides.pagProds}
+              className={classNames("__wab_instance", sty.pagProds)}
+            />
+          </div>
         </div>
       </div>
     </React.Fragment>
@@ -228,19 +201,17 @@ function PlasmicHomepage__RenderFunc(props: {
 }
 
 const PlasmicDescendants = {
-  root: ["root", "crudTable", "button", "text"],
-  crudTable: ["crudTable"],
-  button: ["button", "text"],
-  text: ["text"]
+  root: ["root", "freeBox", "pagProds"],
+  freeBox: ["freeBox", "pagProds"],
+  pagProds: ["pagProds"]
 } as const;
 type NodeNameType = keyof typeof PlasmicDescendants;
 type DescendantsType<T extends NodeNameType> =
   (typeof PlasmicDescendants)[T][number];
 type NodeDefaultElementType = {
   root: "div";
-  crudTable: typeof CrudTable;
-  button: typeof AntdButton;
-  text: "div";
+  freeBox: "div";
+  pagProds: typeof ProductTable;
 };
 
 type ReservedPropsType = "variants" | "args" | "overrides";
@@ -330,9 +301,8 @@ export const PlasmicHomepage = Object.assign(
   withUsePlasmicAuth(makeNodeComponent("root")),
   {
     // Helper components rendering sub-elements
-    crudTable: makeNodeComponent("crudTable"),
-    button: makeNodeComponent("button"),
-    text: makeNodeComponent("text"),
+    freeBox: makeNodeComponent("freeBox"),
+    pagProds: makeNodeComponent("pagProds"),
 
     // Metadata about props expected for PlasmicHomepage
     internalVariantProps: PlasmicHomepage__VariantProps,

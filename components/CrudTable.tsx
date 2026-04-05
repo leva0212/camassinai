@@ -1,211 +1,374 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { MaterialReactTable, MRT_ColumnDef } from "material-react-table";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import {
+  MaterialReactTable,
+  MRT_ColumnDef,
+} from "material-react-table";
 import { supabase } from "@/lib/supabaseClient";
+import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { Modal, Button, Input, Checkbox, Loader, Box } from "@mantine/core";
 
-// --- Tipos ---
-export type ColumnMeta = {
+type ColumnConfig = {
   field: string;
-  label: string;
+  label?: string;
   type?: "text" | "number" | "boolean";
   visible?: boolean;
-  headerColor?: string;
-  textColor?: string;
   width?: number;
+  titleColor?: string;
+  textColor?: string;
 };
 
-type RowData = Record<string, any>;
+type RowData = { [key: string]: any };
+type CrudTableProps = { tableName: string };
 
-// --- Props ---
-type CrudTableProps = {
-  table: string;
-  idField?: string;
-  columnsMeta?: ColumnMeta[];
-};
+const DEFAULT_COLUMN_COLOR = "#1976d2";
+const DEFAULT_TEXT_COLOR = "#000";
+const PAGE_SIZE = 50;
+const ROW_COLORS = ["#fff", "#f5f5f5"]; // Zebra stripes
 
-// --- Modal de Configuración ---
-function ColumnsConfigModal({
-  columnsConfig,
-  setColumnsConfig,
-  onClose,
-}: {
-  columnsConfig: ColumnMeta[];
-  setColumnsConfig: (cols: ColumnMeta[]) => void;
-  onClose: () => void;
-}) {
-  const [localConfig, setLocalConfig] = useState<ColumnMeta[]>(columnsConfig);
-
-  const updateColumn = (index: number, key: keyof ColumnMeta, value: any) => {
-    const updated = [...localConfig];
-    (updated[index] as any)[key] = value;
-    setLocalConfig(updated);
-  };
-
-  const saveConfig = () => {
-    setColumnsConfig(localConfig);
-    console.log("Configuración guardada:", JSON.stringify(localConfig, null, 2));
-    onClose();
-  };
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        background: "rgba(0,0,0,0.4)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 1000,
-      }}
-    >
-      <div style={{ background: "#fff", padding: 20, borderRadius: 8, width: 600, maxHeight: "80%", overflowY: "auto" }}>
-        <h3>Configuración de Columnas</h3>
-        {localConfig.map((c, i) => (
-          <div key={c.field} style={{ borderBottom: "1px solid #ddd", marginBottom: 10, paddingBottom: 8 }}>
-            <strong>{c.field}</strong>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
-              <label>
-                Label: <input value={c.label} onChange={(e) => updateColumn(i, "label", e.target.value)} />
-              </label>
-              <label>
-                Visible:{" "}
-                <input
-                  type="checkbox"
-                  checked={c.visible !== false}
-                  onChange={(e) => updateColumn(i, "visible", e.target.checked)}
-                />
-              </label>
-              <label>
-                Width:{" "}
-                <input
-                  type="number"
-                  value={c.width ?? 150}
-                  onChange={(e) => updateColumn(i, "width", Number(e.target.value))}
-                  style={{ width: 60 }}
-                />
-              </label>
-              <label>
-                Header Color:{" "}
-                <input
-                  type="color"
-                  value={c.headerColor ?? "#ffffff"}
-                  onChange={(e) => updateColumn(i, "headerColor", e.target.value)}
-                />
-              </label>
-              <label>
-                Text Color:{" "}
-                <input
-                  type="color"
-                  value={c.textColor ?? "#000000"}
-                  onChange={(e) => updateColumn(i, "textColor", e.target.value)}
-                />
-              </label>
-            </div>
-          </div>
-        ))}
-
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <button onClick={saveConfig}>Guardar</button>
-          <button onClick={onClose}>Cancelar</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// --- CrudTable ---
-export function CrudTable({ table, idField = "id", columnsMeta = [] }: CrudTableProps) {
+export function CrudTable({ tableName }: CrudTableProps) {
   const [rows, setRows] = useState<RowData[]>([]);
-  const [columnsConfig, setColumnsConfig] = useState<ColumnMeta[]>(columnsMeta);
-  const [showConfig, setShowConfig] = useState(false);
+  const [columnsConfig, setColumnsConfig] = useState<ColumnConfig[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [fetchingMore, setFetchingMore] = useState(false);
+  const [primaryKey, setPrimaryKey] = useState<string>("");
 
-  // --- Cargar datos ---
-  const loadData = async () => {
-    const { data, error } = await supabase.from(table).select("*");
-    if (error) {
-      alert(error.message);
-      return;
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  const loadColumnsConfig = useCallback(async () => {
+    if (!tableName?.trim()) return;
+    try {
+      const { data: configData } = await supabase
+        .from("table_config")
+        .select("*")
+        .eq("table_name", tableName)
+        .single();
+
+      if (!configData) {
+        const { data: columnsData, error } = await supabase.rpc(
+          "get_table_columns",
+          { p_table_name: tableName }
+        );
+        if (error) throw error;
+
+        const defaultConfig: ColumnConfig[] = columnsData.map((c: any) => ({
+          field: c.column_name,
+          label: c.column_name,
+          visible: true,
+          width: 150,
+          titleColor: DEFAULT_COLUMN_COLOR,
+          textColor: DEFAULT_TEXT_COLOR,
+        }));
+
+        setColumnsConfig(defaultConfig);
+
+        await supabase.from("table_config").insert({
+          table_name: tableName,
+          config: defaultConfig,
+        });
+      } else {
+        setColumnsConfig(configData.config);
+      }
+    } catch (err) {
+      console.error("Error cargando configuración:", err);
     }
-    setRows(data || []);
+  }, [tableName]);
+
+
+type PrimaryKeyResult = {
+  primary_key: string;
+} | null;
+
+const loadPrimaryKey = useCallback(async () => {
+  if (!tableName?.trim()) return;
+
+  try {
+    // Obtenemos datos con supabase RPC
+    const res = await supabase.rpc("get_primary_key", { p_table_name: tableName }).single();
+
+    // Desestructuramos de forma segura usando optional chaining y type assertion
+    const data = res.data as PrimaryKeyResult;
+
+    if (res.error) throw res.error;
+
+    // Validamos que data y data.primary_key existan
+    if (data && data.primary_key) {
+      setPrimaryKey(String(data.primary_key)); // ✅ primaryKey es string
+    } else {
+      console.warn("No se encontró primary key para la tabla", tableName);
+      setPrimaryKey(""); // fallback seguro
+    }
+  } catch (err) {
+    console.error("Error obteniendo primary key:", err);
+    setPrimaryKey(""); // fallback seguro
+  }
+}, [tableName]);
+
+  const loadRows = useCallback(async () => {
+    if (!tableName?.trim() || !primaryKey) return;
+    setLoading(true);
+    try {
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .select("*")
+        .range(from, to)
+        .order(primaryKey, { ascending: true });
+
+      if (error) throw error;
+
+      setRows((prev) => [...prev, ...(data || [])]);
+      setHasMore((data?.length || 0) === PAGE_SIZE);
+    } catch (err) {
+      console.error("Error Supabase:", err);
+    } finally {
+      setLoading(false);
+      setFetchingMore(false);
+    }
+  }, [tableName, page, primaryKey]);
+
+  const loadMore = () => {
+    if (!hasMore || fetchingMore) return;
+    setFetchingMore(true);
+    setPage((p) => p + 1);
   };
+
+  const handleRealtime = useCallback(
+    (payload: any) => {
+      if (!primaryKey) return;
+      const updatedRow = payload.new || {};
+      const oldRow = payload.old || {};
+
+      setRows((prev) => {
+        switch (payload.eventType) {
+          case "INSERT":
+            return [updatedRow, ...prev];
+          case "UPDATE":
+            return prev.map((r) =>
+              r[primaryKey] === updatedRow[primaryKey] ? updatedRow : r
+            );
+          case "DELETE":
+            return prev.filter((r) => r[primaryKey] !== oldRow[primaryKey]);
+          default:
+            return prev;
+        }
+      });
+    },
+    [primaryKey]
+  );
 
   useEffect(() => {
-    loadData();
-  }, [table]);
+    if (!tableName || !primaryKey) return;
+    const channel = supabase
+      .channel(`realtime_${tableName}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: tableName },
+        handleRealtime
+      )
+      .subscribe();
 
-  // --- Columnas dinámicas ---
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [tableName, primaryKey, handleRealtime]);
+
+  useEffect(() => {
+    setRows([]);
+    setPage(0);
+    setHasMore(true);
+    loadColumnsConfig();
+    loadPrimaryKey();
+  }, [tableName, loadColumnsConfig, loadPrimaryKey]);
+
+  useEffect(() => {
+    loadRows();
+  }, [loadRows, page]);
+
   const columns = useMemo<MRT_ColumnDef<RowData>[]>(
     () =>
       columnsConfig
-        .filter((c) => c.visible !== false)
+        .filter((c) => c.visible)
         .map((c) => ({
           accessorKey: c.field,
-          header: c.label,
-          size: c.width ?? 150,
-          muiTableHeadCellProps: {
-            sx: {
-              backgroundColor: c.headerColor ?? undefined,
-              color: c.textColor ?? undefined,
-            },
+          header: c.label ?? c.field,
+          size: c.width,
+          Cell: ({ cell, row }) => (
+            <span
+              style={{
+                color: c.textColor ?? DEFAULT_TEXT_COLOR,
+                backgroundColor: ROW_COLORS[row.index % ROW_COLORS.length],
+                display: "block",
+                width: "100%",
+                padding: "4px 8px",
+              }}
+            >
+              {String(cell.getValue())}
+            </span>
+          ),
+          headerCellProps: {
+            sx: { backgroundColor: c.titleColor ?? DEFAULT_COLUMN_COLOR },
           },
-          Cell: ({ cell }): React.ReactNode => {
-            if (c.type === "boolean") return cell.getValue() ? "✅" : "❌";
-            return String(cell.getValue() ?? "");
-          },
+          enableColumnFilter: true,
         })),
     [columnsConfig]
   );
 
-  // --- Simular metadatos del servidor ---
-  const fetchColumnsMeta = async () => {
-    const serverMeta: ColumnMeta[] = [
-      { field: "prod_id", label: "ID", visible: false },
-      { field: "prod_nombre", label: "Nombre" },
-      { field: "prod_precio", label: "Precio", type: "number" },
-      { field: "prod_activo", label: "Activo", type: "boolean" },
-    ];
-    setColumnsConfig(serverMeta);
+  const saveConfig = async (newConfig: ColumnConfig[]) => {
+    setColumnsConfig(newConfig);
+    try {
+      await supabase.from("table_config").upsert(
+        { table_name: tableName, config: newConfig },
+        { onConflict: "table_name" }
+      );
+    } catch (err) {
+      console.error("Error guardando configuración:", err);
+    }
   };
 
-  useEffect(() => {
-    fetchColumnsMeta();
-  }, []);
+  const exportCSV = () => {
+    const csvContent =
+      columns.map((c) => c.header ?? c.accessorKey).join(",") +
+      "\n" +
+      rows
+        .map((r) => columns.map((c) => r[c.accessorKey as string]).join(","))
+        .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, `${tableName}.csv`);
+  };
+
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    autoTable(doc, {
+      head: [columns.map((c) => c.header ?? c.accessorKey)],
+      body: rows.map((r) => columns.map((c) => r[c.accessorKey as string])),
+    });
+    doc.save(`${tableName}.pdf`);
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+      loadMore();
+    }
+  };
+
+  if (loading && rows.length === 0)
+    return (
+      <Box p="md" style={{ display: "flex", justifyContent: "center" }}>
+        <Loader />
+      </Box>
+    );
 
   return (
-    <div style={{ padding: 16 }}>
+    <Box p="md">
+      <Box mb="sm" style={{ display: "flex", gap: 8 }}>
+        <Button onClick={exportCSV}>Exportar CSV</Button>
+        <Button onClick={exportPDF}>Exportar PDF</Button>
+        <Button onClick={() => setModalOpen(true)}>Configurar columnas</Button>
+      </Box>
+
       <MaterialReactTable
         columns={columns}
         data={rows}
-        enableColumnActions
-        enableColumnFilters
         enableSorting
-        enablePagination
+        enableColumnFilters
+        enablePagination={false}
+        enableColumnOrdering
+        enableRowSelection
+        enableStickyHeader
+        muiTableContainerProps={{
+          sx: { maxHeight: 600, overflowY: "auto" },
+          onScroll: handleScroll,
+          ref: tableContainerRef,
+        }}
       />
 
-      <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-        <button onClick={() => setShowConfig(true)}>Configurar columnas</button>
-        <button
-          onClick={() => {
-            console.log(JSON.stringify(columnsConfig, null, 2));
-            alert("Configuración copiada a consola (JSON)");
-          }}
-        >
-          Copiar JSON
-        </button>
-      </div>
-
-      {showConfig && (
-        <ColumnsConfigModal
-          columnsConfig={columnsConfig}
-          setColumnsConfig={setColumnsConfig}
-          onClose={() => setShowConfig(false)}
-        />
+      {fetchingMore && (
+        <Box style={{ display: "flex", justifyContent: "center", margin: 8 }}>
+          <Loader size="sm" />
+        </Box>
       )}
-    </div>
+
+      <Modal
+        opened={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Configurar columnas"
+        size="xl"
+      >
+        {columnsConfig.map((c, idx) => (
+          <Box
+            key={c.field}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: 8,
+              gap: 8,
+            }}
+          >
+            <Input
+              value={c.label}
+              onChange={(e) => {
+                const newCols = [...columnsConfig];
+                newCols[idx].label = e.target.value;
+                setColumnsConfig(newCols);
+              }}
+              placeholder="Label"
+            />
+            <Input
+              type="number"
+              value={c.width}
+              onChange={(e) => {
+                const newCols = [...columnsConfig];
+                newCols[idx].width = parseInt(e.target.value);
+                setColumnsConfig(newCols);
+              }}
+              placeholder="Width"
+            />
+            <Input
+              type="color"
+              value={c.titleColor}
+              onChange={(e) => {
+                const newCols = [...columnsConfig];
+                newCols[idx].titleColor = e.target.value;
+                setColumnsConfig(newCols);
+              }}
+            />
+            <Input
+              type="color"
+              value={c.textColor}
+              onChange={(e) => {
+                const newCols = [...columnsConfig];
+                newCols[idx].textColor = e.target.value;
+                setColumnsConfig(newCols);
+              }}
+            />
+            <Checkbox
+              checked={c.visible}
+              onChange={(e) => {
+                const newCols = [...columnsConfig];
+                newCols[idx].visible = e.currentTarget.checked;
+                setColumnsConfig(newCols);
+              }}
+              label="Visible"
+            />
+          </Box>
+        ))}
+        <Box mt="md">
+          <Button onClick={() => saveConfig(columnsConfig)}>
+            Guardar Configuración Global
+          </Button>
+        </Box>
+      </Modal>
+    </Box>
   );
 }

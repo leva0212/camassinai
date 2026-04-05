@@ -8,13 +8,15 @@ import { ProductCategoriesManager } from "./ProductCategoriesManager";
 import { ProductForm } from "./ProductForm";
 import { CrudTable } from "./CrudTable";
 
+// --- Registrar CrudTable ---
 registerComponent(CrudTable, {
-  name: "CrudTable",
-  importPath: "./CrudTable",
+  name: "CrudTable", // Nombre que verás en Plasmic Studio
+  importPath: "./CrudTable", // Ruta relativa del componente
   props: {
-    table: "string",
-    idField: "string",
-    columns: "string" // Plasmic no entiende tipos complejos, puedes usar JSON.stringify / JSON.parse
+    tableName: {
+      type: "string", // Será un input de texto en Plasmic
+      defaultValue: "productos", // Valor por defecto
+    },
   },
 });
 

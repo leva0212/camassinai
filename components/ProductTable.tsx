@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Modal from "@/components/ui/Modal";
 import ProductEditModal from "@/components/ProductEditModal";
 
+import {
+  MaterialReactTable,
+  MRT_ColumnDef,
+} from "material-react-table";
 
 interface Producto {
   prod_id: number;
@@ -15,7 +19,6 @@ interface Producto {
 }
 
 export function ProductTable({ refresh }: { refresh?: boolean }) {
-  const [productoEditando, setProductoEditando] = useState<any>(null);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(false);
   const [editProducto, setEditProducto] = useState<Producto | null>(null);
@@ -43,12 +46,12 @@ export function ProductTable({ refresh }: { refresh?: boolean }) {
       return;
     }
 
-    const lista = (data || []).map((p: any) => ({
+    const lista: Producto[] = (data || []).map((p: any) => ({
       prod_id: p.prod_id,
       prod_nombre: p.prod_nombre,
       prod_precio: p.prod_precio,
       prod_activo: p.prod_activo,
-      prod_cat_nombre: p.productos_categorias?.prod_cat_nombre
+      prod_cat_nombre: p.productos_categorias?.prod_cat_nombre,
     }));
 
     setProductos(lista);
@@ -58,44 +61,60 @@ export function ProductTable({ refresh }: { refresh?: boolean }) {
     cargar();
   }, [refresh]);
 
+  // COLUMNAS MRT
+  const columns = useMemo<MRT_ColumnDef<Producto>[]>(
+    () => [
+      {
+        accessorKey: "prod_nombre",
+        header: "Producto",
+      },
+      {
+        accessorKey: "prod_cat_nombre",
+        header: "Categoría",
+      },
+      {
+        accessorKey: "prod_precio",
+        header: "Precio",
+        Cell: ({ cell }) =>
+          `₡ ${Number(cell.getValue<number>() || 0).toLocaleString("es-CR")}`,
+      },
+      {
+        accessorKey: "prod_activo",
+        header: "Activo",
+        Cell: ({ cell }) => (cell.getValue<boolean>() ? "Sí" : "No"),
+      },
+    ],
+    []
+  );
+
   if (loading) return <div style={{ padding: 20 }}>Cargando...</div>;
 
   return (
     <>
       <div style={box}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead style={{ background: "#f4f6f8" }}>
-            <tr>
-              <th style={th}>Producto</th>
-              <th style={th}>Categoría</th>
-              <th style={th}>Precio</th>
-              <th style={th}>Activo</th>
-              <th style={th}></th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {productos.map((p) => (
-              <tr key={p.prod_id} style={{ borderTop: "1px solid #eee" }}>
-                <td style={td}>{p.prod_nombre}</td>
-                <td style={td}>{p.prod_cat_nombre || "-"}</td>
-                <td style={td}>
-                  ₡ {Number(p.prod_precio || 0).toLocaleString("es-CR")}
-                </td>
-                <td style={td}>{p.prod_activo ? "Sí" : "No"}</td>
-
-                <td style={td}>
-                  <button
-                    onClick={() => setEditProducto(p)}
-                    style={btn}
-                  >
-                    Editar
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <MaterialReactTable
+          columns={columns}
+          data={productos}
+          enableColumnFilters
+          enableSorting
+          enablePagination
+          enableDensityToggle
+          enableColumnOrdering
+          enableColumnResizing
+          enableHiding
+          muiTableBodyRowProps={({ row }) => ({
+            onDoubleClick: () => setEditProducto(row.original),
+            sx: { cursor: "pointer" },
+          })}
+          renderRowActions={({ row }) => (
+            <button
+              style={btn}
+              onClick={() => setEditProducto(row.original)}
+            >
+              Editar
+            </button>
+          )}
+        />
       </div>
 
       <Modal
@@ -119,16 +138,14 @@ const box = {
   background: "#fff",
   borderRadius: 10,
   boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-  overflow: "hidden"
+  overflow: "hidden",
 };
-
-const th = { textAlign: "left" as const, padding: 12 };
-const td = { padding: 12 };
 
 const btn = {
   background: "#4f46e5",
   color: "#fff",
   border: "none",
   padding: "6px 10px",
-  borderRadius: 6
+  borderRadius: 6,
+  cursor: "pointer",
 };
